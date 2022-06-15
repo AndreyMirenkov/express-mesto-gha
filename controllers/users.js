@@ -32,7 +32,11 @@ module.exports.createUser = (req, res) => {
 };
 module.exports.patchProfile = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, about },
+    { new: true, runValidators: true, upsert: true },
+  )
     .then((user) => {
       if (user === null) {
         const error = new Error('Запрашиваемый пользователь не найден');
@@ -46,8 +50,6 @@ module.exports.patchProfile = (req, res) => {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные в методы обновления пользователя' });
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID пользователя' });
       } return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
@@ -67,8 +69,6 @@ module.exports.patchAvatar = (req, res) => {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные в методы обновления аватара' });
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID пользователя' });
       } return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
