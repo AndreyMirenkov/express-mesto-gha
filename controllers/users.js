@@ -32,14 +32,14 @@ module.exports.createUser = (req, res) => {
 };
 module.exports.patchProfile = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (user === null) {
         const error = new Error('Запрашиваемый пользователь не найден');
         error.name = 'NotFoundError';
         throw error;
       }
-      res.send({ data: user });
+      res.status(200).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
@@ -53,14 +53,14 @@ module.exports.patchProfile = (req, res) => {
 };
 module.exports.patchAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (user === null) {
         const error = new Error('Запрашиваемый пользователь не найден');
         error.name = 'NotFoundError';
         throw error;
       }
-      res.send({ data: user });
+      res.status(200).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
