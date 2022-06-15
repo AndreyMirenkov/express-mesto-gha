@@ -32,7 +32,7 @@ module.exports.createUser = (req, res) => {
 };
 module.exports.patchProfile = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(req.user._id, { name, about })
     .then((user) => {
       if (user === null) {
         const error = new Error('Запрашиваемый пользователь не найден');

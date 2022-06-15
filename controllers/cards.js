@@ -41,7 +41,7 @@ module.exports.likeCard = (req, res) => {
       error.name = 'NotFoundError';
       throw error;
     }
-    res.status(201).send({ message: card });
+    res.status(200).send({ message: card });
   })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
@@ -62,7 +62,7 @@ module.exports.dislikeCard = (req, res) => {
       error.name = 'NotFoundError';
       throw error;
     }
-    res.status(201).send({ message: card });
+    res.status(200).send({ message: card });
   })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
