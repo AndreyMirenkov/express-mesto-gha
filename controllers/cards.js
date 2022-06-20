@@ -9,8 +9,15 @@ module.exports.createCard = (req, res) => {
   Card.create({ name, link, owner: req.user._id }).then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
+        if (err.message.includes(': name')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле name. Строка должна содержать от 2 до 30 символов' });
+        }
+        if (err.message.includes(': link')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле link. Данные обязательны и должны быть строкой' });
+        }
         return res.status(400).send({ message: 'Переданы некорректные данные в методы создания карточки' });
-      } return res.status(500).send({ message: err.message });
+      }
+      return res.status(500).send({ message: err.message });
     });
 };
 module.exports.deleteCard = (req, res) => {
@@ -27,7 +34,8 @@ module.exports.deleteCard = (req, res) => {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      } return res.status(500).send({ message: 'Ошибка на сервере' });
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
 module.exports.likeCard = (req, res) => {
@@ -48,7 +56,8 @@ module.exports.likeCard = (req, res) => {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      } return res.status(500).send({ message: err.name });
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
 module.exports.dislikeCard = (req, res) => {
@@ -69,6 +78,7 @@ module.exports.dislikeCard = (req, res) => {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      } return res.status(500).send({ message: 'Ошибка на сервере' });
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };

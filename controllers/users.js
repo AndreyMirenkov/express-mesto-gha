@@ -18,7 +18,8 @@ module.exports.getUser = (req, res) => {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Неправильный формат данных ID пользователя' });
-      } return res.status(500).send({ message: 'Ошибка на сервере' });
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
 module.exports.createUser = (req, res) => {
@@ -26,8 +27,17 @@ module.exports.createUser = (req, res) => {
   User.create({ name, about, avatar }).then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные в методы создания пользователя' });
-      } return res.status(500).send({ message: 'Ошибка на сервере' });
+        if (err.message.includes(': name')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле name. Строка должна содержать от 2 до 30 символов' });
+        }
+        if (err.message.includes(': about')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле about. Строка должна содержать от 2 до 30 символов' });
+        }
+        if (err.message.includes(': avatar')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле avatar. Данные обязательны и должны быть строкой' });
+        }
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
 module.exports.patchProfile = (req, res) => {
@@ -49,8 +59,16 @@ module.exports.patchProfile = (req, res) => {
       if (err.name === 'NotFoundError') {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные в методы обновления пользователя' });
-      } return res.status(500).send({ message: 'Ошибка на сервере' });
+        if (err.message.includes(': name')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле name. Строка должна содержать от 2 до 30 символов' });
+        }
+        if (err.message.includes(': about')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле about. Строка должна содержать от 2 до 30 символов' });
+        }
+      } if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
 module.exports.patchAvatar = (req, res) => {
@@ -68,7 +86,12 @@ module.exports.patchAvatar = (req, res) => {
       if (err.name === 'NotFoundError') {
         return res.status(404).send({ message: err.message });
       } if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные в методы обновления аватара' });
-      } return res.status(500).send({ message: 'Ошибка на сервере' });
+        if (err.message.includes(': avatar')) {
+          return res.status(400).send({ message: 'Переданы некорректные данные в поле avatar. Данные обязательны и должны быть строкой' });
+        }
+      } if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
+      }
+      return res.status(500).send({ message: 'Ошибка на сервере' });
     });
 };
