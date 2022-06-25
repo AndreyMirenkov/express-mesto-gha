@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator(v) {
-        return /^https?:\/\/(\w|-|\.|~|:|\/|\?|#|\[|\]|@|!|\$|&|'|\(|\)|\*|\+|,|;|=)+(?:<>)*\b$/ig.test(v);
+        return /^https?:\/\/(\w|-|\.|~|:|\/|\?|#|\[|\]|@|!|\$|&|'|\(|\)|\*|\+|,|;|=)+\b$/.test(v);
       },
       message: (props) => `${props.value} Ссылка должна начинаться с http:// или https:// и состоять из последовательности цифр, латинских букв и символов`,
     },
