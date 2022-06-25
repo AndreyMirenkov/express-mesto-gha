@@ -33,13 +33,7 @@ app.post('/signup', celebrate({
 
 app.use(auth);
 
-app.use('/users', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
-  }),
-}), require('./routes/users'));
+app.use('/users', require('./routes/users'));
 
 app.use('/cards', require('./routes/cards'));
 
@@ -69,7 +63,7 @@ app.use((err, req, res, next) => {
       return res.status(400).send({ message: message === '' ? 'Переданы некорректные данные в поле avatar. Данные обязательны и должны быть строкой' : message });
     }
     if (err.message.includes(': link')) {
-      return res.status(400).send({ message: 'Переданы некорректные данные в поле link. Данные обязательны и должны быть строкой' });
+      return res.status(400).send({ message: message === '' ? 'Переданы некорректные данные в поле link. Данные обязательны и должны быть строкой' : message });
     }
   }
 

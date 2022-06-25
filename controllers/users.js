@@ -33,7 +33,7 @@ module.exports.createUser = (req, res, next) => {
         name, about, avatar, email, password: hash,
       });
     })
-    .then(() => res.send({ message: 'Вы зарегистрировались' }))
+    .then((user) => res.send({ message: user }))
     .catch(next);
 };
 module.exports.patchProfile = (req, res, next) => {
