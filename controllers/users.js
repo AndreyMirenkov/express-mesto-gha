@@ -1,46 +1,42 @@
+const bcrypt = require('bcryptjs');
+const validator = require('validator');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const NotFoundError = require('../errors/not-found-error');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({}).then((users) => res.send({ data: users }))
-    .catch(() => res.status(500).send({ message: 'Ошибка на сервере' }));
+    .catch(next);
 };
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   User.findById(req.params.userid).then((user) => {
     if (user === null) {
-      const error = new Error('Запрашиваемый пользователь не найден');
-      error.name = 'NotFoundError';
-      throw error;
+      throw new NotFoundError('Запрашиваемый пользователь не найден');
     }
     res.send({ data: user });
   })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: err.message });
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID пользователя' });
-      }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 };
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar }).then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        if (err.message.includes(': name')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле name. Строка должна содержать от 2 до 30 символов' });
-        }
-        if (err.message.includes(': about')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле about. Строка должна содержать от 2 до 30 символов' });
-        }
-        if (err.message.includes(': avatar')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле avatar. Данные обязательны и должны быть строкой' });
-        }
+module.exports.createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email,
+  } = req.body;
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => {
+      if (!validator.isEmail(email)) {
+        const error = new Error('Строка не является почтой');
+        error.name = 'EmailValidationError';
+        error.statusCode = 400;
+        throw error;
       }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+      return User.create({
+        name, about, avatar, email, password: hash,
+      });
+    })
+    .then(() => res.send({ message: 'Вы зарегистрировались' }))
+    .catch(next);
 };
-module.exports.patchProfile = (req, res) => {
+module.exports.patchProfile = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -49,49 +45,63 @@ module.exports.patchProfile = (req, res) => {
   )
     .then((user) => {
       if (user === null) {
-        const error = new Error('Запрашиваемый пользователь не найден');
-        error.name = 'NotFoundError';
-        throw error;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.status(200).send({ data: user });
     })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: err.message });
-      } if (err.name === 'ValidationError') {
-        if (err.message.includes(': name')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле name. Строка должна содержать от 2 до 30 символов' });
-        }
-        if (err.message.includes(': about')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле about. Строка должна содержать от 2 до 30 символов' });
-        }
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 };
-module.exports.patchAvatar = (req, res) => {
+module.exports.patchAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (user === null) {
-        const error = new Error('Запрашиваемый пользователь не найден');
-        error.name = 'NotFoundError';
-        throw error;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.status(200).send({ data: user });
     })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: err.message });
-      } if (err.name === 'ValidationError') {
-        if (err.message.includes(': avatar')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле avatar. Данные обязательны и должны быть строкой' });
-        }
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
+    .catch(next);
+};
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  User.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!validator.isEmail(email)) {
+        const error = new Error('Строка не является почтой');
+        error.name = 'EmailValidationError';
+        error.statusCode = 400;
+        throw error;
       }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+      if (!user) {
+        const error = new Error('Неправильные почта или пароль');
+        error.name = 'NotFoundError';
+        error.statusCode = 401;
+        throw error;
+      }
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            const error = new Error('Неправильные почта или пароль');
+            error.name = 'NotFoundError';
+            error.statusCode = 401;
+            throw error;
+          }
+          return user;
+        });
+    })
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      res.cookie('jwt', token, {
+        maxAge: 3600000,
+        httpOnly: true,
+      });
+      res.send({ message: 'Welcome' });
+    })
+    .catch(next);
+};
+module.exports.infoUser = (req, res, next) => {
+  User.findById(req.user._id).then((user) => {
+    res.status(200).send({ data: user });
+  })
+    .catch(next);
 };

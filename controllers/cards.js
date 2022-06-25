@@ -1,84 +1,57 @@
 const Card = require('../models/card');
+const NotFoundError = require('../errors/not-found-error');
 
-module.exports.getCard = (req, res) => {
+module.exports.getCard = (req, res, next) => {
   Card.find({}).then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(500).send({ message: 'Ошибка на сервере' }));
+    .catch(next);
 };
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
-  Card.create({ name, link, owner: req.user._id }).then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        if (err.message.includes(': name')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле name. Строка должна содержать от 2 до 30 символов' });
-        }
-        if (err.message.includes(': link')) {
-          return res.status(400).send({ message: 'Переданы некорректные данные в поле link. Данные обязательны и должны быть строкой' });
-        }
-        return res.status(400).send({ message: 'Переданы некорректные данные в методы создания карточки' });
-      }
-      return res.status(500).send({ message: err.message });
-    });
+  Card.create({ name, link, owner: req.user._id })
+    .then((card) => res.send({ data: card }))
+    .catch(next);
 };
-module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId).then((card) => {
+module.exports.deleteCard = (req, res, next) => {
+  Card.findById(req.params.cardId).then((card) => {
     if (card === null) {
-      const error = new Error('Запрашиваемая карточка не найдена');
-      error.name = 'NotFoundError';
+      throw new NotFoundError('Запрашиваемая карточка не найдена');
+    }
+    if (card.owner == req.user._id) {
+      Card.findByIdAndRemove(card._id).then(() => {
+        res.status(200).send({ message: 'Картинка удалена' });
+      });
+    } else {
+      const error = new Error('Вы не можете удалить чужую карточку');
+      error.name = 'ErrorDelete';
+      error.statusCode = 403;
       throw error;
     }
-    res.status(200).send({ message: 'Картинка удалена' });
   })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: err.message });
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 };
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
   ).then((card) => {
     if (card === null) {
-      const error = new Error('Запрашиваемая карточка не найдена');
-      error.name = 'NotFoundError';
-      throw error;
+      throw new NotFoundError('Запрашиваемая карточка не найдена');
     }
     res.status(200).send({ message: card });
   })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: err.message });
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 };
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true },
   ).then((card) => {
     if (card === null) {
-      const error = new Error('Запрашиваемая карточка не найдена');
-      error.name = 'NotFoundError';
-      throw error;
+      throw new NotFoundError('Запрашиваемая карточка не найдена');
     }
     res.status(200).send({ message: card });
   })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: err.message });
-      } if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Неправильный формат данных ID карточки' });
-      }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 };
