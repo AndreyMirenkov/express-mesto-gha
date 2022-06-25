@@ -33,7 +33,14 @@ module.exports.createUser = (req, res, next) => {
         name, about, avatar, email, password: hash,
       });
     })
-    .then((user) => res.send({ message: user }))
+    .then((user) => res.send({
+      message: {
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+      },
+    }))
     .catch(next);
 };
 module.exports.patchProfile = (req, res, next) => {
@@ -94,6 +101,7 @@ module.exports.login = (req, res, next) => {
       res.cookie('jwt', token, {
         maxAge: 3600000,
         httpOnly: true,
+        sameSite: true,
       });
       res.send({ message: 'Welcome' });
     })
