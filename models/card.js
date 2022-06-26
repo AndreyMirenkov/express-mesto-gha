@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const regex = require('../helpers/regex');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -12,7 +13,7 @@ const cardSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(v) {
-        return /^https?:\/\/(\w|-|\.|~|:|\/|\?|#|\[|\]|@|!|\$|&|'|\(|\)|\*|\+|,|;|=)+\b$/.test(v);
+        return regex.test(v);
       },
       message: (props) => `${props.value} Ссылка должна начинаться с http:// или https:// и состоять из последовательности цифр, латинских букв и символов`,
     },

@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const regex = require('../helpers/regex');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -21,7 +23,7 @@ const userSchema = new mongoose.Schema({
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator(v) {
-        return /^https?:\/\/(\w|-|\.|~|:|\/|\?|#|\[|\]|@|!|\$|&|'|\(|\)|\*|\+|,|;|=)+\b$/.test(v);
+        return regex.test(v);
       },
       message: (props) => `${props.value} Ссылка должна начинаться с http:// или https:// и состоять из последовательности цифр, латинских букв и символов`,
     },
@@ -37,4 +39,29 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 });
+
+userSchema.statics.findUserByCredentials = function (email, password) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        const error = new Error('Неправильные почта или пароль');
+        error.name = 'NotFoundError';
+        error.statusCode = 401;
+        throw error;
+      }
+
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            const error = new Error('Неправильные почта или пароль');
+            error.name = 'NotFoundError';
+            error.statusCode = 401;
+            throw error;
+          }
+
+          return user;
+        });
+    });
+};
+
 module.exports = mongoose.model('user', userSchema);
