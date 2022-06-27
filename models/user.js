@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const regex = require('../helpers/regex');
+const DataAuthError = require('../errors/data-auth-error');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -44,19 +45,13 @@ userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        const error = new Error('Неправильные почта или пароль');
-        error.name = 'NotFoundError';
-        error.statusCode = 401;
-        throw error;
+        throw new DataAuthError('Неправильные почта или пароль');
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            const error = new Error('Неправильные почта или пароль');
-            error.name = 'NotFoundError';
-            error.statusCode = 401;
-            throw error;
+            throw new DataAuthError('Неправильные почта или пароль');
           }
 
           return user;

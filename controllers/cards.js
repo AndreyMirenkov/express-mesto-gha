@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/not-found-error');
+const DeleteError = require('../errors/delete-error');
 
 module.exports.getCard = (req, res, next) => {
   Card.find({}).then((cards) => res.send({ data: cards }))
@@ -21,10 +22,7 @@ module.exports.deleteCard = (req, res, next) => {
         res.status(200).send({ message: 'Картинка удалена' });
       });
     } else {
-      const error = new Error('Вы не можете удалить чужую карточку');
-      error.name = 'ErrorDelete';
-      error.statusCode = 403;
-      throw error;
+      throw new DeleteError('Вы не можете удалить чужую карточку');
     }
   })
     .catch(next);
