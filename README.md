@@ -22,7 +22,7 @@
 
 ## Стек технологий ##
 <div display = 'flex' flex-wrap = 'wrap'>
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original-wordmark.svg" alt = 'Express.js' width = '50' height = '50'/>
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original-wordmark.svg" alt = 'MongoDB' width = '50' height = '50'/>
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original-wordmark.svg" alt = 'Node.js' width = '50' height = '50'/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original-wordmark.svg" alt = 'Express.js' width = '55' height = '55'/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original-wordmark.svg" alt = 'MongoDB' width = '55' height = '55'/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original-wordmark.svg" alt = 'Node.js' width = '55' height = '55'/>
 </div>          
